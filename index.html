@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>購屋能力試算 | 專屬服務</title>
+  <style>
+    :root{
+      /* === 色彩計畫：乾燥玫瑰與溫暖灰 === */
+      --primary: #c05c7e;       /* 主色：乾燥玫瑰紅 (專業且優雅) */
+      --primary-light: #fdf2f6; /* 淺色：極淺粉紅背景 */
+      --primary-hover: #b04b6d; /* 深色：按鈕懸停 */
+      --accent: #d68c9f;        /* 裝飾色 */
+      --text: #4a4a4a;          /* 文字：深暖灰 (比純黑柔和) */
+      --text-light: #787878;    /* 次要文字 */
+      --bg-gradient: linear-gradient(135deg, #fff6f8 0%, #fff 100%);
+      --card-shadow: 0 10px 40px rgba(192, 92, 126, 0.1);
+      --radius: 20px;           /* 更大的圓角 */
+    }
+
+    * { box-sizing: border-box; }
+    
+    body {
+      font-family: 'Helvetica Neue', Helvetica, 'PingFang TC', 'Microsoft JhengHei', Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: var(--bg-gradient);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 500px;
+      background: #fff;
+      padding: 30px 24px;
+      border-radius: var(--radius);
+      box-shadow: var(--card-shadow);
+      border: 1px solid #fff;
+    }
+
+    h2 {
+      text-align: center;
+      color: var(--primary);
+      margin: 0 0 24px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    /* 輸入框標籤 */
+    label {
+      display: block;
+      font-weight: 500;
+      margin-top: 16px;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    /* 輸入框樣式 */
+    input[type=number] {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      margin-top: 8px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      background: #fcfcfc;
+      color: var(--text);
+    }
+    
+    input[type=number]:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(214, 140, 159, 0.2);
+    }
+
+    /* 按鈕群組 */
+    .btnGroup {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .optBtn {
+      flex: 1;
+      min-width: 60px;
+      padding: 10px 0;
+      border-radius: 50px; /* 全圓角 */
+      border: 1px solid #ecdce4;
+      background: #fff;
+      cursor: pointer;
+      color: var(--text-light);
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .optBtn:hover {
+      background: #fff0f5;
+    }
+
+    .optBtn.selected {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(192, 92, 126, 0.3);
+    }
+
+    .muted {
+      color: var(--text-light);
+      font-size: 13px;
+      margin-top: 16px;
+      line-height: 1.5;
+      background: #f9f9f9;
+      padding: 12px;
+      border-radius: 12px;
+    }
+
+    /* 結果區塊 */
+    .result {
+      margin-top: 24px;
+      padding: 20px;
+      border-radius: 16px;
+      background: var(--primary-light);
+      border: 1px solid #fceef2;
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result p {
+      margin: 8px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 15px;
+      border-bottom: 1px dashed #e8d0d8;
+      padding-bottom: 8px;
+    }
+    
+    .result p:last-child { border-bottom: none; }
+
+    /* 結果中的重點數字 */
+    .result strong {
+      color: var(--primary);
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .hint {
+      color: #e11d48;
+      font-size: 13px;
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    /* === 頁尾名片區 === */
+    footer {
+      margin-top: 40px;
+      padding-top: 24px;
+      text-align: center;
+      position: relative;
+    }
+    
+    footer::before {
+      content: "";
+      display: block;
+      width: 40px;
+      height: 3px;
+      background: #fce7f3;
+      margin: 0 auto 20px;
+      border-radius: 2px;
+    }
+
+    .agent-title {
+      font-size: 12px;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .agent-name {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .store-info {
+      font-size: 13px;
+      color: var(--text-light);
+      margin-bottom: 4px;
+    }
+
+    /* LINE 按鈕優化 */
+    .contact-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 20px;
+      padding: 12px 28px;
+      background-color: #06c755; 
+      color: white;
+      text-decoration: none;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 15px;
+      box-shadow: 0 4px 15px rgba(6, 199, 85, 0.25);
+      transition: all 0.2s;
+    }
+
+    .contact-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(6, 199, 85, 0.35);
+      background-color: #05b54d;
+    }
+
+    .copyright {
+      margin-top: 30px; 
+      font-size: 11px; 
+      color: #ccc;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 10px; }
+      .wrap { padding: 24px 20px; }
+      .result strong { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <input id="ltvVal" type="hidden" value="80">
+    <input id="yearsVal" type="hidden" value="30">
+
+    <h2>購屋能力試算</h2>
+
+    <label>目前月薪（實領，元）</label>
+    <input id="salary" type="number" inputmode="numeric" placeholder="例如：45000">
+
+    <label>每月貸款支出（車貸 / 信貸，元）</label>
+    <input id="debt" type="number" inputmode="numeric" placeholder="例如：8000" value="0">
+
+    <label>房貸年利率（年 %）</label>
+    <input id="rate" type="number" step="0.01" inputmode="decimal" placeholder="例如：2.25" value="2.25">
+
+    <label>貸款成數</label>
+    <div id="ltvButtons" class="btnGroup">
+      <button type="button" class="optBtn" data-val="60">60%</button>
+      <button type="button" class="optBtn" data-val="70">70%</button>
+      <button type="button" class="optBtn" data-val="75">75%</button>
+      <button type="button" class="optBtn" data-val="80">80%</button>
+      <button type="button" class="optBtn" data-val="90">90%</button>
+    </div>
+
+    <label>貸款年限</label>
+    <div id="yearButtons" class="btnGroup">
+      <button type="button" class="optBtn" data-val="20">20 年</button>
+      <button type="button" class="optBtn" data-val="30">30 年</button>
+      <button type="button" class="optBtn" data-val="40">40 年</button>
+    </div>
+
+    <div class="muted">
+      💡 銀行建議月繳上限：<br><strong>（月薪 - 現有每月負債）/ 3</strong>。<br>試算結果包含約 2% 仲介服務費。
+    </div>
+
+    <div id="result" class="result" role="region" aria-live="polite">
+      <p>建議房屋總價 <span id="housePrice"></span></p>
+      <p>建議自備款 <span id="downpayment"></span></p>
+      <p>銀行可貸金額 <span id="loanAmount"></span></p>
+      <p>銀行建議月繳 <span id="suggestedMonthly"></span></p>
+      <p>此房價實際月繳 <span id="actualMonthly"></span></p>
+      <p>仲介服務費 (2%) <span id="fee"></span></p>
+    </div>
+
+    <p id="needFill" class="hint" style="display:none">請填寫「目前月薪」與「房貸年利率」才能顯示試算結果。</p>
+
+    <footer>
+      <div class="agent-title">Professional Realtor</div>
+      <div class="agent-name">住商不動產・張喻暄</div>
+      <div class="store-info">永康復國店</div>
+      <div class="store-info">台南市永康區復國路89號</div>
+      
+      <a class="contact-btn" href="https://line.me/" target="_blank">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="margin-right:8px"><path d="M22 10.3c0-4.6-4.5-8.3-10-8.3S2 5.7 2 10.3c0 4.1 3.6 7.5 8.9 8.2.3 0 .8.2.9.5l.6 2c.2.5.1.9-.3.7L15 19.5c2.7-.8 5.7-3.8 5.7-7.2h1.3z"/></svg>
+        預約諮詢 / 加 LINE 好友
+      </a>
+      <div class="copyright">© 2025 Jia Label. All Rights Reserved.</div>
+    </footer>
+  </div>
+
+  <script>
+    // 數字格式化：四捨五入到萬
+    const fmtWan = n => {
+        const wan = Math.round(n/10000);
+        return `<span style="font-weight:700">${wan.toLocaleString()} 萬</span>`;
+    };
+    // 數字格式化：僅加千分位 (給月繳用)
+    const fmtInt = n => `<span>${Math.round(n).toLocaleString()} 元</span>`;
+
+    const salaryEl = document.getElementById('salary');
+    const debtEl = document.getElementById('debt');
+    const rateEl = document.getElementById('rate');
+    const ltvHidden = document.getElementById('ltvVal');
+    const yearsHidden = document.getElementById('yearsVal');
+    const resultEl = document.getElementById('result');
+    const needFillEl = document.getElementById('needFill');
+
+    function initButtons(containerId, hiddenEl, defaultVal) {
+      const container = document.getElementById(containerId);
+      container.querySelectorAll('.optBtn').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          container.querySelectorAll('.optBtn').forEach(b=>b.classList.remove('selected'));
+          btn.classList.add('selected');
+          hiddenEl.value = btn.dataset.val;
+          autoCalc();
+        });
+      });
+      const defaultBtn = container.querySelector('.optBtn[data-val="'+defaultVal+'"]');
+      if(defaultBtn) defaultBtn.classList.add('selected');
+      hiddenEl.value = defaultVal;
+    }
+
+    function autoCalc(){
+      const salary = Number(salaryEl.value) || 0;
+      const debt = Number(debtEl.value) || 0;
+      const annualRate = Number(rateEl.value);
+      const ltv = Number(ltvHidden.value)/100;
+      const years = Number(yearsHidden.value);
+
+      if(!salary || annualRate===null||isNaN(annualRate)){
+        resultEl.style.display='none';
+        needFillEl.style.display='block';
+        return;
+      } else { needFillEl.style.display='none'; }
+
+      const monthlyRate = annualRate/100/12;
+      const n = years*12;
+      // 銀行建議月繳上限
+      const suggestedMonthly = Math.max(0,(salary-debt)/3);
+
+      let loanAmount;
+      // 反推可貸金額 PV = PMT * [(1-(1+r)^-n)/r]
+      if(monthlyRate===0){ loanAmount = suggestedMonthly*n; }
+      else {
+        loanAmount = suggestedMonthly * (1 - Math.pow(1+monthlyRate, -n)) / monthlyRate;
+      }
+
+      const housePrice = loanAmount/ltv;
+      const downpayment = housePrice-loanAmount;
+      
+      // 計算實際月繳 (再次驗證)
+      let actualMonthly;
+      if(monthlyRate===0){ actualMonthly=loanAmount/n; }
+      else actualMonthly=loanAmount*monthlyRate*Math.pow(1+monthlyRate,n)/(Math.pow(1+monthlyRate,n)-1);
+      
+      const fee=housePrice*0.02;
+
+      // 更新介面 (針對新樣式調整了 HTML 結構，這裡只塞值)
+      document.getElementById('housePrice').innerHTML = `<strong>${Math.round(housePrice/10000).toLocaleString()} 萬</strong>`;
+      document.getElementById('downpayment').innerHTML = fmtWan(downpayment);
+      document.getElementById('loanAmount').innerHTML = fmtWan(loanAmount);
+      document.getElementById('suggestedMonthly').innerHTML = fmtInt(suggestedMonthly);
+      document.getElementById('actualMonthly').innerHTML = fmtInt(actualMonthly);
+      document.getElementById('fee').innerHTML = fmtWan(fee);
+
+      resultEl.style.display='block';
+    }
+
+    initButtons('ltvButtons',ltvHidden,'80');
+    initButtons('yearButtons',yearsHidden,'30');
+    [salaryEl,debtEl,rateEl].forEach(el=>el.addEventListener('input',()=>autoCalc()));
+    
+    // 頁面載入後若有預填值則計算
+    window.addEventListener('load',()=>{ autoCalc(); });
+  </script>
+</body>
+</html>
