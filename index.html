@@ -262,7 +262,6 @@
       <button type="button" class="optBtn" data-val="70">70%</button>
       <button type="button" class="optBtn" data-val="75">75%</button>
       <button type="button" class="optBtn" data-val="80">80%</button>
-      <button type="button" class="optBtn" data-val="90">90%</button>
     </div>
 
     <label>貸款年限</label>
@@ -273,7 +272,7 @@
     </div>
 
     <div class="muted">
-      💡 銀行建議月繳上限：<br><strong>（月薪 - 現有每月負債）/ 3</strong>。<br>試算結果包含約 2% 仲介服務費。
+      💡 銀行建議月繳上限：<br><strong>（月薪 - 現有每月負債）× 60%</strong>。<br>試算結果包含約 2% 仲介服務費。
     </div>
 
     <div id="result" class="result" role="region" aria-live="polite">
@@ -293,7 +292,7 @@
       <div class="store-info">永康復國店</div>
       <div class="store-info">台南市永康區復國路89號</div>
       
-      <a class="contact-btn" href="https://line.me/" target="_blank">
+      <a class="contact-btn" href="https://line.me/ti/p/kVH_xqPK_F" target="_blank">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="margin-right:8px"><path d="M22 10.3c0-4.6-4.5-8.3-10-8.3S2 5.7 2 10.3c0 4.1 3.6 7.5 8.9 8.2.3 0 .8.2.9.5l.6 2c.2.5.1.9-.3.7L15 19.5c2.7-.8 5.7-3.8 5.7-7.2h1.3z"/></svg>
         預約諮詢 / 加 LINE 好友
       </a>
@@ -305,10 +304,10 @@
     // 數字格式化：四捨五入到萬
     const fmtWan = n => {
         const wan = Math.round(n/10000);
-        return `<span style="font-weight:700">${wan.toLocaleString()} 萬</span>`;
+        return `<strong>${wan.toLocaleString()} 萬</strong>`;
     };
     // 數字格式化：僅加千分位 (給月繳用)
-    const fmtInt = n => `<span>${Math.round(n).toLocaleString()} 元</span>`;
+    const fmtInt = n => `<strong>${Math.round(n).toLocaleString()} 元</strong>`;
 
     const salaryEl = document.getElementById('salary');
     const debtEl = document.getElementById('debt');
@@ -337,39 +336,64 @@
       const salary = Number(salaryEl.value) || 0;
       const debt = Number(debtEl.value) || 0;
       const annualRate = Number(rateEl.value);
-      const ltv = Number(ltvHidden.value)/100;
+      const currentLtv = Number(ltvHidden.value)/100; // 使用者選擇的成數
       const years = Number(yearsHidden.value);
 
       if(!salary || annualRate===null||isNaN(annualRate)){
         resultEl.style.display='none';
         needFillEl.style.display='block';
         return;
-      } else { needFillEl.style.display='none'; }
-
-      const monthlyRate = annualRate/100/12;
-      const n = years*12;
-      // 銀行建議月繳上限
-      const suggestedMonthly = Math.max(0,(salary-debt)/3);
-
-      let loanAmount;
-      // 反推可貸金額 PV = PMT * [(1-(1+r)^-n)/r]
-      if(monthlyRate===0){ loanAmount = suggestedMonthly*n; }
-      else {
-        loanAmount = suggestedMonthly * (1 - Math.pow(1+monthlyRate, -n)) / monthlyRate;
+      } else { 
+        needFillEl.style.display='none'; 
       }
 
-      const housePrice = loanAmount/ltv;
-      const downpayment = housePrice-loanAmount;
-      
-      // 計算實際月繳 (再次驗證)
-      let actualMonthly;
-      if(monthlyRate===0){ actualMonthly=loanAmount/n; }
-      else actualMonthly=loanAmount*monthlyRate*Math.pow(1+monthlyRate,n)/(Math.pow(1+monthlyRate,n)-1);
-      
-      const fee=housePrice*0.02;
+      // 1. 計算基本月付能力 (負債比 60%)
+      const maxDTI = 0.6;
+      let available = (salary * maxDTI) - debt;
+      if (available < 0) available = 0;
+      const suggestedMonthly = Math.round(available);
 
-      // 更新介面 (針對新樣式調整了 HTML 結構，這裡只塞值)
-      document.getElementById('housePrice').innerHTML = `<strong>${Math.round(housePrice/10000).toLocaleString()} 萬</strong>`;
+      // 2. 準備貸款參數
+      const monthlyRate = annualRate / 100 / 12;
+      const totalMonths = years * 12;
+      
+      if (totalMonths === 0) return;
+
+      // 3. 先計算「絕對最大貸款能力」(基於 80% 成數的標準情況)
+      let baseMaxLoan;
+      if (monthlyRate === 0) {
+        baseMaxLoan = available * totalMonths;
+      } else {
+        baseMaxLoan = available * ((1 - Math.pow(1 + monthlyRate, -totalMonths)) / monthlyRate);
+      }
+      
+      // 4. 推算基準最大總價 (假設以 80% 貸款為基準能力)
+      let baseMaxPrice = baseMaxLoan / 0.8;
+
+      // 5. 根據使用者選擇的貸款成數，回推現在的房屋總價和貸款金額
+      // 總價 = 基準最大總價 (固定能力)
+      const housePrice = baseMaxPrice;
+      
+      // 貸款金額 = 總價 × 使用者選擇的成數
+      const loanAmount = housePrice * currentLtv;
+      
+      // 6. 計算頭期款
+      const downpayment = housePrice - loanAmount;
+      
+      // 7. 計算實際月繳 (基於實際貸款金額)
+      let actualMonthly;
+      if (monthlyRate === 0) {
+        actualMonthly = loanAmount / totalMonths;
+      } else {
+        const factor = Math.pow(1 + monthlyRate, totalMonths);
+        actualMonthly = loanAmount * monthlyRate * factor / (factor - 1);
+      }
+      
+      // 8. 計算仲介費
+      const fee = housePrice * 0.02;
+
+      // 更新介面
+      document.getElementById('housePrice').innerHTML = fmtWan(housePrice);
       document.getElementById('downpayment').innerHTML = fmtWan(downpayment);
       document.getElementById('loanAmount').innerHTML = fmtWan(loanAmount);
       document.getElementById('suggestedMonthly').innerHTML = fmtInt(suggestedMonthly);
